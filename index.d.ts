@@ -8,16 +8,21 @@ export type BillingProfileInput = {
   postalCode: string;
 };
 
+export type PaymentMethodType = "card" | "paypal" | "ideal";
+
 export type PaymentMethodSummary = {
   id: string;
-  brand: string;
-  last4: string;
+  type: string;
+  isDefault: boolean;
+  cardholderName: string | null;
+  brand: string | null;
+  last4: string | null;
   expMonth: number | null;
   expYear: number | null;
   funding: string | null;
   country: string | null;
-  cardholderName: string | null;
-  isDefault: boolean;
+  email: string | null;
+  bankName: string | null;
 };
 
 export type PaymentsOverview = {
@@ -44,10 +49,15 @@ export type SyncPaymentMethodInput = {
   billingProfile?: BillingProfileInput;
 };
 
+export type CreateSetupIntentInput = {
+  billingProfile?: BillingProfileInput;
+  paymentMethodType?: PaymentMethodType;
+};
+
 export type OrdnaryPayClient = {
   baseUrl: string;
   getPaymentsOverview: () => Promise<PaymentsOverview>;
-  createSetupIntent: (input?: { billingProfile?: BillingProfileInput }) => Promise<CreateSetupIntentResult>;
+  createSetupIntent: (input?: CreateSetupIntentInput) => Promise<CreateSetupIntentResult>;
   syncPaymentMethod: (input: SyncPaymentMethodInput) => Promise<PaymentsOverview>;
   setDefaultPaymentMethod: (paymentMethodId: string) => Promise<PaymentsOverview>;
   removePaymentMethod: (paymentMethodId: string) => Promise<PaymentsOverview>;

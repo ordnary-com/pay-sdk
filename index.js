@@ -79,10 +79,13 @@ export function createOrdnaryPayClient(config) {
   return {
     baseUrl,
     getPaymentsOverview() {
+      // TODO: Also get secure payments 
       return request("/api/account/payments/overview");
     },
     createSetupIntent(input = {}) {
-      const body = withFlatBillingProfile({}, input.billingProfile);
+      const body = withFlatBillingProfile({
+        paymentMethodType: input.paymentMethodType,
+      }, input.billingProfile);
 
       return request("/api/account/payments/setup-intent", {
         method: "POST",
