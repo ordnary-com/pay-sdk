@@ -1,6 +1,6 @@
 {
   "name": "@ordnary/pay-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Safe client SDK for Ordnary Pay payment-method management",
   "type": "module",
   "main": "./index.js",
@@ -18,7 +18,8 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "README.md"
+    "README.md",
+    "openapi.yaml"
   ],
   "keywords": [
     "ordnary",
@@ -27,5 +28,10 @@
     "sdk",
     "pay"
   ],
+  "peerDependencies": {
+    "next": ">=16",
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
   "license": "MIT"
 }

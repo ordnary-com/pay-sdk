@@ -54,6 +54,25 @@ export type CreateSetupIntentInput = {
   paymentMethodType?: PaymentMethodType;
 };
 
+export type ChargePaymentMethodInput = {
+  amountCents: number;
+  currency?: string;
+  paymentMethodId?: string;
+  description?: string;
+  metadata?: Record<string, string>;
+  idempotencyKey?: string;
+};
+
+export type ChargePaymentMethodResult = {
+  paymentIntentId: string;
+  status: string;
+  amount: number;
+  currency: string;
+  paymentMethodId: string | null;
+  requiresAction: boolean;
+  clientSecret: string | null;
+};
+
 export type OrdnaryPayClient = {
   baseUrl: string;
   getPaymentsOverview: () => Promise<PaymentsOverview>;
@@ -61,6 +80,7 @@ export type OrdnaryPayClient = {
   syncPaymentMethod: (input: SyncPaymentMethodInput) => Promise<PaymentsOverview>;
   setDefaultPaymentMethod: (paymentMethodId: string) => Promise<PaymentsOverview>;
   removePaymentMethod: (paymentMethodId: string) => Promise<PaymentsOverview>;
+  chargePaymentMethod: (input: ChargePaymentMethodInput) => Promise<ChargePaymentMethodResult>;
 };
 
 export function createOrdnaryPayClient(config: OrdnaryPayClientConfig): OrdnaryPayClient;

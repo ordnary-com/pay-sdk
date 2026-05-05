@@ -135,5 +135,25 @@ export function createOrdnaryPayClient(config) {
         method: "DELETE",
       });
     },
+    chargePaymentMethod(input) {
+      if (!input || typeof input.amountCents !== "number" || input.amountCents <= 0) {
+        throw new Error("amountCents must be a positive number");
+      }
+
+      return request("/api/account/payments/charge", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amountCents: Math.round(input.amountCents),
+          currency: input.currency,
+          paymentMethodId: input.paymentMethodId,
+          description: input.description,
+          metadata: input.metadata,
+          idempotencyKey: input.idempotencyKey,
+        }),
+      });
+    },
   };
 }

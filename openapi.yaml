@@ -99,6 +99,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentsOverview'
 
+  /charge:
+    post:
+      summary: Charge a saved payment method
+      description: Creates an off-session PaymentIntent on the user's payment customer and confirms it immediately. Use for wallet top-ups and other on-demand charges.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargePaymentMethodRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargePaymentMethodResult'
+        '400':
+          description: Invalid amount / missing payment method
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /billing-profile:
     post:
       summary: Update billing profile
@@ -231,6 +253,53 @@ components:
             paymentMethodType:
               type: string
               enum: [card, paypal, ideal]
+
+    ChargePaymentMethodRequest:
+      type: object
+      required: [amountCents]
+      properties:
+        amountCents:
+          type: integer
+          minimum: 1
+          description: Amount to charge in the smallest currency unit (e.g. cents).
+        currency:
+          type: string
+          description: ISO 4217 currency code (default "eur").
+          default: eur
+        paymentMethodId:
+          type: string
+          description: Specific payment method to charge. Defaults to the user's default method.
+        description:
+          type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        idempotencyKey:
+          type: string
+
+    ChargePaymentMethodResult:
+      type: object
+      required: [paymentIntentId, status, amount, currency, requiresAction]
+      properties:
+        paymentIntentId:
+          type: string
+        status:
+          type: string
+          description: Stripe PaymentIntent status (e.g. succeeded, requires_action).
+        amount:
+          type: integer
+        currency:
+          type: string
+        paymentMethodId:
+          type: string
+          nullable: true
+        requiresAction:
+          type: boolean
+        clientSecret:
+          type: string
+          nullable: true
+          description: Present when requiresAction is true, so the client can complete 3DS via Stripe.js.
 
     SetupIntentResult:
       type: object
