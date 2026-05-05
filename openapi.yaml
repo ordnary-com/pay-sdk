@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Ordnary Pay API
+  description: API for managing payments, billing profiles, and payment methods within the Ordnary ecosystem.
+  version: 1.0.0
+servers:
+  - url: /api/account/payments
+    description: Relative to account center base URL
+
+paths:
+  /overview:
+    get:
+      summary: Get payments overview
+      description: Returns saved payment methods, default method ID, and billing profile.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsOverview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /setup-intent:
+    post:
+      summary: Create a SetupIntent
+      description: Initializes a payment method setup flow (Stripe SetupIntent).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSetupIntentRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetupIntentResult'
+        '403':
+          description: Step-up authentication required
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /methods/sync:
+    post:
+      summary: Finalize and sync payment method
+      description: Confirms a SetupIntent and synchronizes the result with the Ordnary database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizeCardSetupRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsOverview'
+
+  /methods/default:
+    post:
+      summary: Set default payment method
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMethodId]
+              properties:
+                paymentMethodId:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsOverview'
+
+  /methods/{id}:
+    delete:
+      summary: Remove a payment method
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsOverview'
+
+  /billing-profile:
+    post:
+      summary: Update billing profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingProfile'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsOverview'
+
+  /address/search:
+    get:
+      summary: Search address suggestions
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: countryCode
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AddressSuggestion'
+
+components:
+  schemas:
+    PaymentsOverview:
+      type: object
+      properties:
+        methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentMethodSummary'
+        defaultPaymentMethodId:
+          type: string
+          nullable: true
+        billingProfile:
+          $ref: '#/components/schemas/BillingProfile'
+          nullable: true
+        publishableKey:
+          type: string
+
+    PaymentMethodSummary:
+      type: object
+      required: [id, type, isDefault]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [card, paypal, ideal, sepa_debit, link]
+        isDefault:
+          type: boolean
+        cardholderName:
+          type: string
+          nullable: true
+        brand:
+          type: string
+          nullable: true
+        last4:
+          type: string
+          nullable: true
+        expMonth:
+          type: integer
+          nullable: true
+        expYear:
+          type: integer
+          nullable: true
+        funding:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+          nullable: true
+
+    BillingProfile:
+      type: object
+      required: [fullName, country, line1, city, postalCode]
+      properties:
+        fullName:
+          type: string
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        state:
+          type: string
+          nullable: true
+        postalCode:
+          type: string
+
+    CreateSetupIntentRequest:
+      allOf:
+        - $ref: '#/components/schemas/BillingProfile'
+        - type: object
+          properties:
+            paymentMethodType:
+              type: string
+              enum: [card, paypal, ideal]
+
+    SetupIntentResult:
+      type: object
+      properties:
+        clientSecret:
+          type: string
+        publishableKey:
+          type: string
+
+    FinalizeCardSetupRequest:
+      type: object
+      required: [setupIntentId]
+      properties:
+        setupIntentId:
+          type: string
+        makeDefault:
+          type: boolean
+        fullName:
+          type: string
+        country:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+
+    AddressSuggestion:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        fullName:
+          type: string
+        country:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: unauthorized
